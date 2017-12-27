@@ -53,7 +53,7 @@ void handleRoot() {
     handleSDNotMounted();
     return;
   }
-  File file = SD_MMC.open("index.html");
+  File file = SD_MMC.open("/index.html");
   if (file) {
     server.streamFile(file, "text/html");
   } else {
@@ -66,7 +66,7 @@ void handleConfig() {
     handleSDNotMounted;
     return;
   }
-  File file = SD_MMC.open("config.json");
+  File file = SD_MMC.open("/config.json");
   if (file) {
     server.streamFile(file, "application/json");
   } else {
