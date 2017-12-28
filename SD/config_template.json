@@ -1,0 +1,15 @@
+{
+	"Sections":[
+		{
+		"Name":"Darth vader",//name of section
+		"TextColor":"#FFFFFF",//text color for buttons in this section
+		"ButtonColor":"#44a3aa",//background color for buttons in this section
+		"Buttons":[//array of buttons
+		 	{
+		 	"Caption":"NOOOOOOoooooo",//caption of button
+		 	"Name":"Nooooo.wav"//name of file in /sounds folder on SD
+		 	}
+		 ]
+		}
+	]
+}

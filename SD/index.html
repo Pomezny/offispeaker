@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<style type="text/css">
+	.tile {
+	    width: 113px;
+	    height: 113px;
+	    margin-left: 50px;
+	    margin-bottom: 35px;
+	    float: left;
+	    text-align: center;
+	    display: table;
+	    vertical-align: middle;
+	    cursor: pointer;
+	    text-align: center;
+    	text-transform: uppercase;
+	}
+	.tile > span{
+		display: table-cell;
+    	vertical-align: middle;
+	}
+	</style>
+</head>
+<body>
+	<div id="container">
+	</div>
+	<script type="text/javascript">
+		function clicked(element){
+			$.get("/play",{ "name": $(element).data("name")});
+		}
+
+		function createSection(section){
+			var main = $("<div />");
+			var buttons = $("<div />");
+			var h = $("<h1 />").text(section.Name);
+			$.each(section.Buttons,function(index, item){
+				var button = $("<div />").attr('onClick', 'clicked(this);').attr("class","tile").data("name",item.Name).css("background-color",section.ButtonColor).css("color",section.TextColor);
+				var text = $("<span />").text(item.Caption);
+				button.append(text);
+				buttons.append(button);
+			});
+			main.append(h);
+			main.append(buttons);
+			$("#container").append(main);
+		}
+
+		$(function() {
+    		$.ajax({
+			  url: "/config",
+			  dataType: "json",
+			  success: function(data) {
+			    $.each(data.Sections, function(index, item) {
+			      createSection(item);
+			      $("#container").append($("<div />").css("clear","both"));
+			    });
+			  }
+			});
+		});
+
+	</script>
+</body>
+</html>
