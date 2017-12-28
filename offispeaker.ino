@@ -4,7 +4,8 @@
 #include <WiFi.h>
 
 #define BUFF_SIZE 1024
-#define TIME_BETWEEN_SAMPLES 62 // (int) 1/sample_rate
+//there seems to be some delay in addition to set value. Lower number by a little bit until it sounds right.
+#define TIME_BETWEEN_SAMPLES 55 // (int) 1/sample_rate 
 const char * ssid = "Seth_AP";
 const char * password = "mojewifina";
 
@@ -33,7 +34,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   server.on("/", handleRoot);
-  server.on("/config.json", handleConfig);
+  server.on("/config", handleConfig);
   server.on("/play", handlePlay);
   server.on("/mountSD", handleMountSD);
   server.onNotFound(handleNotFound);
@@ -72,6 +73,14 @@ void handleConfig() {
   } else {
     handleNotFound();
   }
+}
+
+void handleOK(){
+  server.send(200, "application/json", "{Result:\"OK\"}");
+}
+
+void handleNOK(){
+  server.send(200, "application/json", "{Result:\"NOK\"}");
 }
 
 void handlePlay() {
@@ -116,8 +125,10 @@ void initSD() {
 void playSound(String fileName) {
   if(keepPlaying){
     Serial.println("Sound is already playing. Skipping");
+    handleNOK();
     return;
   }
+  handleOK();
   wavFile = fileName;
   createFileReaderTask();
   delay(10);
