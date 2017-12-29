@@ -1,3 +1,31 @@
+#include <bitswap.h>
+#include <chipsets.h>
+#include <color.h>
+#include <colorpalettes.h>
+#include <colorutils.h>
+#include <controller.h>
+#include <cpp_compat.h>
+#include <dmx.h>
+#include <FastLED.h>
+#include <fastled_config.h>
+#include <fastled_delay.h>
+#include <fastled_progmem.h>
+#include <fastpin.h>
+#include <fastspi.h>
+#include <fastspi_bitbang.h>
+#include <fastspi_dma.h>
+#include <fastspi_nop.h>
+#include <fastspi_ref.h>
+#include <fastspi_types.h>
+#include <hsv2rgb.h>
+#include <led_sysdefs.h>
+#include <lib8tion.h>
+#include <noise.h>
+#include <pixelset.h>
+#include <pixeltypes.h>
+#include <platforms.h>
+#include <power_mgt.h>
+
 #include <ESP32WebServer.h> 
 #include "FS.h"
 #include "SD_MMC.h"
@@ -17,9 +45,16 @@ uint8_t soundBuffer2[BUFF_SIZE];
 bool keepPlaying = false;
 bool isSDOK = false;
 
+CRGB leds[1];
+CRGB webColor=CRGB::White;
+byte webBrightness=255;
+
 void setup() {
   Serial.begin(115200);
+  FastLED.addLeds<WS2812B, 18, GRB>(leds, 1);
 
+  leds[0] = CRGB::Red;
+  FastLED.show();
   Serial.print("Connecting to:");
   Serial.println(ssid);
   WiFi.mode(WIFI_STA);
@@ -33,10 +68,15 @@ void setup() {
   Serial.print("Connected with IP: ");
   Serial.println(WiFi.localIP());
 
+  leds[0] = CRGB::Black;
+  FastLED.show();
+
   server.on("/", handleRoot);
   server.on("/config", handleConfig);
   server.on("/play", handlePlay);
   server.on("/mountSD", handleMountSD);
+  server.on("/setLed", handleSetLed);
+  server.on("/getLed", handleGetLed);
   server.onNotFound(handleNotFound);
   server.begin();
 
@@ -53,7 +93,7 @@ void handleRoot() {
   if (!isSDOK) {
     handleSDNotMounted();
     return;
-  }
+  }  
   File file = SD_MMC.open("/index.html");
   if (file) {
     server.streamFile(file, "text/html");
@@ -109,6 +149,23 @@ void handleSDNotMounted() {
   }
 }
 
+void handleSetLed() {
+  if (server.hasArg("r") && server.hasArg("g") && server.hasArg("b") && server.hasArg("a")) {
+    webColor.r=server.arg("r").toInt();
+    webColor.g=server.arg("g").toInt();
+    webColor.b=server.arg("b").toInt();
+    webBrightness=map(server.arg("a").toInt(),0,100,0,255);
+    handleOK();
+    FastLED.setBrightness(webBrightness);
+    leds[0]=webColor;
+    FastLED.show();
+  }
+}
+
+void handleGetLed() {
+  server.send(200, "application/json", "{\"r\":\""+String(webColor.r)+"\",\"g\":\""+String(webColor.g)+"\",\"b\":\""+String(webColor.b)+"\",\"a\":\""+String(map(webBrightness,0,255,0,100))+"\"}");
+}
+
 void handleNotFound() {
   server.send(404, "text/plain", "Ooops. File Not Found\n\n");
 }
@@ -137,6 +194,8 @@ void playSound(String fileName) {
 
 void wavPlayer(void * param) {
   bool firstBuffer = true;
+  leds[0] = CRGB::Green;
+  FastLED.show();
   while (keepPlaying) {
     if (firstBuffer) {
       for (int i = 0; i < BUFF_SIZE; i++) {
@@ -153,6 +212,8 @@ void wavPlayer(void * param) {
     }
     vTaskResume(fileReaderTask);
   }
+  leds[0] = webColor;
+  FastLED.show();
   vTaskDelete(NULL);
 }
 

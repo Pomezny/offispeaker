@@ -3,6 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script src="https://cdn.rawgit.com/Pomezny/offispeaker/master/jscolor/jscolor.min.js"></script>
 	<style type="text/css">
 	.tile {
 	    width: 113px;
@@ -22,8 +23,26 @@
     	vertical-align: middle;
 	}
 	</style>
+	<script type="text/javascript">
+	function updateLed(){
+		var rgb = document.getElementById('colorPicker').jscolor.rgb;
+		$.get("/setLed",{ "r": Math.round(rgb[0]),
+			"g": Math.round(rgb[1]),
+			"b": Math.round(rgb[2]),
+			"a": $("#brightness").val(),
+		});
+	}
+	</script>
 </head>
 <body>
+	<div id="leds">
+		<input id="colorPicker" type="button"
+    		class="jscolor {valueElement:'colorValue',value:'FFFFFF',mode:'HS'}"
+    		style="width:34px; height:20px; border: 1px black solid"></input>
+    		<br/>
+        <input type="hidden" id="colorValue" onchange='updateLed()' />
+    	<input id="brightness" name="brightness" value="100" style="width:30px;" onchange="updateLed()" />
+	</div>
 	<div id="container">
 	</div>
 	<script type="text/javascript">
@@ -55,6 +74,16 @@
 			      createSection(item);
 			      $("#container").append($("<div />").css("clear","both"));
 			    });
+			    setTimeout(function(){
+				$.ajax({
+				  url: "/getLed",
+				  dataType: "json",
+				  success: function(data) {
+				    $("#brightness").val(data.a);
+				    document.getElementById('colorPicker').jscolor.fromRGB(data.r,data.g,data.b);
+				  }
+				});
+			}, 300);
 			  }
 			});
 		});
