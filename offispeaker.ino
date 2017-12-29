@@ -252,8 +252,10 @@ void fileReader(void * param) {
     file.close();
     Serial.println("File closed");
     keepPlaying = false;
-    vTaskDelete(NULL);
+  }else{
+    Serial.println("failed to open:"+wavFile);
   }
+  vTaskDelete(NULL);
 }
 
 void clientHandler(void * param) {
